@@ -1,19 +1,18 @@
-const redis = require("redis");
-const client = redis.createClient({host: "openwhisk_redis_1"});
-const { promisify } = require("util");
-const get = promisify(client.get).bind(client);
-const set = promisify(client.set).bind(client);
+async function main(params, redis) {
+	//return {env: process.env}
 
-async function main(params) {
+	let ret ='Nothing done'
 	if (params.get) {
-		const value = await get(params.get)
-		return {success: true, msg: 'Value gotten', value}
+		ret = await redis.get(params.get)
+
 	} else if (params.set && params.value) {
-		const ret = await set(params.set, params.value)
-		return {success: true, msg: 'Value set', ret}
-	} else {
-		return {success: true, msg: 'Nothing done'}
+		ret = await redis.set(params.set, params.value)
+
+	} else if (params.del) {
+		ret = await redis.del(params.del)
 	}
+
+	return {msg: ret}
 }
 
 exports.main = main;
