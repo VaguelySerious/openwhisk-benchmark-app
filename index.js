@@ -1,19 +1,40 @@
+const fetch = require("node-fetch");
+const streams = require("./util/streams");
+const transform = require("./util/transform");
+
+const baseUrl = "http://url-to-tile-server.com";
+// "https://openwhisk-tiles.s3.eu-central-1.amazonaws.com/elevation";
+
 async function main(params, redis) {
-	//return {env: process.env}
+  const tileStream = await getTile(params);
 
-	let ret ='Nothing done'
-	if (params.get) {
-		ret = await redis.get(params.get)
+  const pngSettings = {
+    colorType: 0 // grayscale
+  };
 
-	} else if (params.set && params.value) {
-		ret = await redis.set(params.set, params.value)
+  const resultBuffer = await streams.pngStreamTransform(
+    tileStream,
+    pngSettings,
+    transform.colorByHeight
+  );
 
-	} else if (params.del) {
-		ret = await redis.del(params.del)
-	}
+  return { params, body: resultBuffer.toString("base64") };
+}
 
-	return {msg: ret}
+async function getTile({ z, x, y }) {
+  const url = `${baseUrl}/${z}/${x}/${y}.png`;
+
+  // const existing = await redis.get(tileName)
+  // if (existing) {
+  //   return existing
+  // }
+
+  console.log("Fetching", url.slice(baseUrl.length));
+  // const tile = s3s.ReadStream(s3, bucket);
+  const res = await fetch(url);
+  return res.body;
+
+  // redis.set(tileName, tile)
 }
 
 exports.main = main;
-
