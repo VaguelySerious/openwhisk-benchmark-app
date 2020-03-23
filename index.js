@@ -1,13 +1,23 @@
 const fetch = require("node-fetch");
 const streams = require("./util/streams");
 const transform = require("./util/transform");
+const { promisify } = require("util");
+const Redis = require("redis");
+require("redis-streams")(Redis);
 
-const baseUrl = "http://url-to-tile-server.com";
-// "https://openwhisk-tiles.s3.eu-central-1.amazonaws.com/elevation";
+const redis = Redis.createClient({
+  return_buffers: true
+});
 
-async function main(params, redis) {
+const isInCache = promisify(redis.exists).bind(redis);
+
+const baseUrl =
+  "https://openwhisk-tiles.s3.eu-central-1.amazonaws.com/elevation";
+
+async function main(params, injectedRedis) {
   const tileStream = await getTile(params);
 
+  // TODO Prevent it from scaling down to 8bit grayscale from 16bit
   const pngSettings = {
     colorType: 0 // grayscale
   };
@@ -22,19 +32,20 @@ async function main(params, redis) {
 }
 
 async function getTile({ z, x, y }) {
-  const url = `${baseUrl}/${z}/${x}/${y}.png`;
+  const tileName = `${z}/${x}/${y}.png`;
+  console.log("- Getting", tileName);
 
-  // const existing = await redis.get(tileName)
-  // if (existing) {
-  //   return existing
-  // }
+  const exists = await isInCache(tileName);
+  if (exists) {
+    console.log("- Cache hit");
+    return redis.readStream(tileName);
+  }
 
-  console.log("Fetching", url.slice(baseUrl.length));
-  // const tile = s3s.ReadStream(s3, bucket);
+  console.log("- Cache miss");
+  const url = `${baseUrl}/${tileName}`;
   const res = await fetch(url);
-  return res.body;
 
-  // redis.set(tileName, tile)
+  return res.body.pipe(redis.writeThrough(tileName));
 }
 
 exports.main = main;
