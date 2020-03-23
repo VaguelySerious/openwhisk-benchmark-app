@@ -1,4 +1,4 @@
-test.zip
+*.zip
 node_modules
 *.png
 .vscode

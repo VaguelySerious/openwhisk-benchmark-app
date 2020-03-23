@@ -1,8 +1,8 @@
 #!/bin/bash
-if [ ! -f test.zip ]; then
-    zip -r test.zip *
+if [ ! -f action.zip ]; then
+    zip -r action.zip *
 else
-    zip -ur test.zip *
+    zip -ur action.zip *
 fi
-wsk -i action update test test.zip --kind nodejs:10
-wsk -i action invoke --result test --param x 5 --param y 3 --param z 3
+wsk -i action update tiles action.zip --kind nodejs:10
+wsk -i action invoke --result tiles --param x 5 --param y 3 --param z 3
