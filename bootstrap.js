@@ -4,10 +4,17 @@
 const fs = require("fs");
 const handler = require("./index").main;
 
-handler({ z: 3, x: 5, y: 3 }, {})
+let tile = { z: 3, x: 5, y: 3 };
+if (process.argv[2]) {
+  const [z, x, y] = process.argv[2].split("/");
+  tile = { z, x, y };
+}
+
+handler(tile, {})
   .then(({ params, body }) => {
     // fs.writeFileSync("out.png", body);
-    fs.writeFileSync("out.png", Buffer.from(body, "base64"));
+    // fs.writeFileSync("out.png", Buffer.from(body.image, "base64"));
+    console.log(body);
     process.exit(0);
   })
   .catch(console.error);

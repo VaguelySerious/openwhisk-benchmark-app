@@ -21,7 +21,15 @@ const baseUrl =
 
 async function main(params, injectedRedis) {
   logging.start();
-  const tileStream = await getTile(params);
+  const tileStream = await getTile(params).catch(() => null);
+
+  if (!tileStream) {
+    return {
+      statusCode: 404,
+      headers: { "Content-Type": "application/json" },
+      body: {}
+    };
+  }
 
   // TODO Prevent it from scaling down to 8bit grayscale from 16bit
   const pngSettings = {
@@ -34,15 +42,22 @@ async function main(params, injectedRedis) {
     transform.colorByHeight
   );
 
+  const image = resultBuffer.toString("base64");
   const ret = {
-    statusCode: 200,
-    headers: { "Content-Type": "image/png" },
-    params,
-    body: {
+    statusCode: 200
+  };
+
+  if (params.binary === "true") {
+    ret.headers = { "Content-Type": "image/png" };
+    ret.body = image;
+  } else {
+    ret.headers = { "Content-Type": "application/json" };
+    ret.body = {
       image: resultBuffer.toString("base64"),
       logging: logging.end()
-    }
-  };
+    };
+  }
+
   return ret;
 }
 
@@ -57,13 +72,15 @@ async function getTile({ z, x, y }) {
     return redis.readStream(tileName);
   }
 
-  logging.registerHit(false);
   const url = `${baseUrl}/${tileName}`;
+  logging.registerHit(false);
   logging.startFetch();
   const res = await fetch(url);
+  if (res.status !== 200) {
+    throw new Error("Can not get tile");
+  }
 
   return res.body.pipe(redis.writeThrough(tileName));
-  return res.body;
 }
 
 exports.main = main;
