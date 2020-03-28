@@ -1,57 +1,57 @@
-const fs = require("fs");
-const os = require("os");
+const fs = require('fs')
+const os = require('os')
 
 function hashString(str) {
-  let hash = 0;
+  let hash = 0
   for (let i = 0; i < str.length; i++) {
-    hash += Math.pow(str.charCodeAt(i) * 31, str.length - i);
-    hash = hash & hash; // Convert to 32bit integer
+    hash += Math.pow(str.charCodeAt(i) * 31, str.length - i)
+    hash = hash & hash // Convert to 32bit integer
   }
-  return hash;
+  return hash
 }
 
 //detect vm id based on either boot time or mac-address+hostname (should be VM unique in azure)
-var vmId = process.platform;
-if (vmId == "win32" || vmId == "win64") {
-  vmId = process.env["COMPUTERNAME"];
+var vmId = process.platform
+if (vmId == 'win32' || vmId == 'win64') {
+  vmId = process.env['COMPUTERNAME']
 } else {
   vmId = Math.floor(
     Date.now() / 1000 -
       fs
-        .readFileSync("/proc/uptime")
+        .readFileSync('/proc/uptime')
         .toString()
-        .split(" ")[0]
-        .split(".")[0]
+        .split(' ')[0]
+        .split('.')[0]
   )
     .toString(32)
-    .toUpperCase();
+    .toUpperCase()
 }
 
-const osType = process.platform;
-const nodeVersion = process.version;
-const containerStartTime = Date.now();
+const osType = process.platform
+const nodeVersion = process.version
+const containerStartTime = Date.now()
 const containerId = (containerStartTime + Math.floor(Math.random() * 10000000))
   .toString(32)
-  .toUpperCase();
+  .toUpperCase()
 
-let startTime;
-let tcpTime;
-let tcpEndTime;
-let cacheHit = false;
+let startTime
+let tcpTime
+let tcpEndTime
+let cacheHit = false
 module.exports.startFetch = () => {
-  tcpTime = Date.now();
-};
+  tcpTime = Date.now()
+}
 module.exports.endFetch = () => {
-  tcpEndTime = Date.now();
-};
+  tcpEndTime = Date.now()
+}
 module.exports.start = () => {
-  startTime = Date.now();
-};
+  startTime = Date.now()
+}
 module.exports.registerHit = bool => {
-  cacheHit = bool;
-};
+  cacheHit = bool
+}
 module.exports.end = result => {
-  const executionEndTime = Date.now();
+  const executionEndTime = Date.now()
   return {
     containerStartTime,
     executionStartTime: startTime,
@@ -62,6 +62,6 @@ module.exports.end = result => {
     containerId,
     vmId,
     osType,
-    nodeVersion
-  };
-};
+    nodeVersion,
+  }
+}
