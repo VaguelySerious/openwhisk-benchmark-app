@@ -25,12 +25,12 @@ function colorByHeight() {
         max = height
       }
 
-      if (height >= 11 && height < 30) {
+      if (height >= 11 && height < 20) {
         this.data[idx] = 0
         this.data[idx + 1] = 60
         this.data[idx + 2] = 255
       }
-      if (height >= 30 && height < 60) {
+      if (height >= 20 && height < 60) {
         this.data[idx] = 0
         this.data[idx + 1] = 255
         this.data[idx + 2] = 0

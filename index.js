@@ -25,13 +25,12 @@ async function main(params, injectedRedis) {
 
   if (!tileStream) {
     return {
-      statusCode: 404,
+      statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: {},
     }
   }
 
-  // TODO Prevent it from scaling down to 8bit grayscale from 16bit
   const pngSettings = {
     // colorType: 0, // grayscale
     // bitDepth: 16
