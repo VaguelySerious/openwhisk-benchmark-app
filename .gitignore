@@ -3,3 +3,5 @@ node_modules
 *.png
 .vscode
 __pycache__
+out.json
+

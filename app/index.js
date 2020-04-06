@@ -24,11 +24,14 @@ async function main(params, injectedRedis) {
   const tileStream = await getTile(params).catch(() => null)
 
   if (!tileStream) {
-    return {
+    const ret = {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: {},
+      body: {
+        logging: logging.end(),
+      },
     }
+    ret.body.logging.empty = true
   }
 
   const pngSettings = {
