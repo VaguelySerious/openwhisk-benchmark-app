@@ -1,5 +1,4 @@
-from locust import HttpLocust, TaskSet, task, between
-from locust.contrib.fasthttp import FastHttpLocust
+import os.path
 from random import randint
 from math import ceil
 
@@ -8,8 +7,8 @@ ycoords = {}
 minZoom = 1
 maxZoom = 10
 gridWidth = 6
-samples = 1000
-filename = 'sequence.txt'
+samples = 6000
+filename = f'seq_{samples}_{maxZoom}.txt'
 
 # set to 0.7 to avoid north/south poles
 yAxisCutoff = 0.8  # out of 1
@@ -44,7 +43,7 @@ def gridrequest():
             x = a + xoffset
             y = b + yoffset
             # For coverage report
-            tileName = f"z={z}&x={x}&y={y}"
+            tileName = f"z={z}&x={x}&y={y} {z}/{x}/{y}.png"
             # tileName = f"{z}/{x}/{y}.png"
             tiles.append(tileName)
 
@@ -86,7 +85,17 @@ print(f"File saved as {filename}")
 
 with open(filename, 'w') as file:
     for grid in res:
+
+        # Skip grids where one tile doesn't exist
+        valid = []
         for tile in grid:
+            tileFilename = tile.split(' ')[1]
+            if os.path.isfile('/home/peter/data/geonames/tiles/' + tileFilename):
+                valid.append(tile)
+        if len(valid) < 12:
+            continue
+
+        for tile in valid:
             file.write(tile)
             file.write('\n')
         if grid is not res[-1]:
