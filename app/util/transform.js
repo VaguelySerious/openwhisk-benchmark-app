@@ -42,7 +42,6 @@ function colorByHeight() {
       }
     }
   }
-  console.log(max, min)
 }
 
 module.exports = {
