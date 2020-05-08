@@ -1,16 +1,32 @@
 const fetch = require('node-fetch')
 const { promisify } = require('util')
+const logging = require('./util/logging')
+const streams = require('./util/streams')
+const transform = require('./util/transform')
 const Redis = require('redis')
 require('redis-streams')(Redis)
 
-const streams = require('./util/streams')
-const transform = require('./util/transform')
-const logging = require('./util/logging')
+const id = logging.vmId.toLowerCase()
+console.error(`--- Host ID: ${id}`)
+
+const ids = {
+  '1fb2c08': '0',
+  '1fb2c09': '0',
+  '1fb2c32': '1',
+  '1fb2c33': '1',
+  '1fb2c6u': '2',
+  '1fb2c6t': '2',
+}
+
+const host = `redis-${ids[id]}-node`
+const port = 6379
+
+console.error(`--- Host: ${host}:${port}`)
 
 const redis = Redis.createClient({
   return_buffers: true,
-  host: process.env.IS_LOCAL ? '127.0.0.1' : 'actioncache',
-  auth_pass: process.env.IS_LOCAL ? '' : process.env.ACTIONCACHE_PASSWORD,
+  host,
+  // auth_pass: process.env.IS_LOCAL ? '' : process.env.ACTIONCACHE_PASSWORD,
   port: 6379,
 })
 
@@ -19,7 +35,7 @@ const isInCache = promisify(redis.exists).bind(redis)
 const baseUrl =
   'https://openwhisk-tiles.s3.eu-central-1.amazonaws.com/elevation'
 
-async function main(params, injectedRedis) {
+async function main(params) {
   logging.start()
   const tileStream = await getTile(params).catch(() => null)
 
@@ -28,17 +44,13 @@ async function main(params, injectedRedis) {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
       body: {
-        logging: logging.end(),
+        logging: logging.end(params),
       },
     }
     ret.body.logging.empty = true
   }
 
-  const pngSettings = {
-    // colorType: 0, // grayscale
-    // bitDepth: 16
-    // inputHasAlpha: false,
-  }
+  const pngSettings = {}
 
   const resultBuffer = await streams.pngStreamTransform(
     tileStream,
@@ -57,8 +69,8 @@ async function main(params, injectedRedis) {
   } else {
     ret.headers = { 'Content-Type': 'application/json' }
     ret.body = {
-      image: resultBuffer.toString('base64'),
-      logging: logging.end(),
+      // image: resultBuffer.toString('base64'),
+      logging: logging.end(params),
     }
   }
 
