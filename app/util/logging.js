@@ -10,22 +10,12 @@ function hashString(str) {
   return hash
 }
 
-//detect vm id based on either boot time or mac-address+hostname (should be VM unique in azure)
-var vmId = process.platform
-if (vmId == 'win32' || vmId == 'win64') {
-  vmId = process.env['COMPUTERNAME']
-} else {
-  vmId = Math.floor(
-    Date.now() / 1000 -
-      fs
-        .readFileSync('/proc/uptime')
-        .toString()
-        .split(' ')[0]
-        .split('.')[0]
-  )
-    .toString(32)
-    .toUpperCase()
-}
+const vmId = Math.floor(
+  Date.now() / 1000 -
+    fs.readFileSync('/proc/uptime').toString().split(' ')[0].split('.')[0]
+)
+  .toString(32)
+  .toUpperCase()
 
 const osType = process.platform
 const nodeVersion = process.version
@@ -38,6 +28,7 @@ let startTime
 let tcpTime
 let tcpEndTime
 let cacheHit = false
+module.exports.vmId = vmId
 module.exports.startFetch = () => {
   tcpTime = Date.now()
 }
@@ -47,12 +38,14 @@ module.exports.endFetch = () => {
 module.exports.start = () => {
   startTime = Date.now()
 }
-module.exports.registerHit = bool => {
+module.exports.registerHit = (bool) => {
   cacheHit = bool
 }
-module.exports.end = result => {
+module.exports.end = (params) => {
   const executionEndTime = Date.now()
   return {
+    params,
+    container: process.env.HOSTNAME,
     containerStartTime,
     executionStartTime: startTime,
     executionEndTime,
