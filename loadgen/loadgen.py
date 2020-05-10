@@ -28,7 +28,7 @@ http_client = httpclient.AsyncHTTPClient(max_clients=30)
 total = 1000
 
 sys.stderr.write('Starting\n')
-for line in open('seq.txt'):
+for line in open('sequence.txt'):
   if line.strip():
     url = baseURL + actionName + '?' + line.split(' ')[0]
     i += 1

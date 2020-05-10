@@ -20,11 +20,12 @@ for (const type of ['ext', 'loc', 'no', 'tmp']) {
       .filter(Boolean)
       .map((l) => l.split(' '))
       .map((sp) => ({
-        reqStartTime: sp[0],
-        clientLatency: sp[1],
-        ...(JSON.parse(sp[2]).logging || { error: true }),
-        batch,
         type,
+        batch,
+        reqStartTimeH: sp[0],
+        reqStartTime: Date.parse('2020-05-04T' + sp[0]),
+        clientLatency: sp[1].slice(0, -2),
+        ...(JSON.parse(sp[2]).logging || { error: true }),
       }))
       .filter((obj) => !obj.error)
       .map((o) => {
@@ -39,5 +40,9 @@ for (const type of ['ext', 'loc', 'no', 'tmp']) {
   }
 }
 
+const header = Object.keys(all[0]).join(',')
+const body = all.map((o) => Object.values(o).join(',')).join('\n')
+
 // console.log(JSON.stringify(all, null, 2))
-fs.writeFileSync('acc.txt', JSON.stringify(all, null, 2), { encoding: 'utf8' })
+// fs.writeFileSync('acc.json', JSON.stringify(all, null, 2), { encoding: 'utf8' })
+fs.writeFileSync('acc.csv', header + '\n' + body, { encoding: 'utf8' })

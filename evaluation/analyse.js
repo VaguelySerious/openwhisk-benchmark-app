@@ -43,79 +43,107 @@ function getId(id) {
   return ids[id]
 }
 
-const file = JSON.parse(fs.readFileSync('acc.txt', { encoding: 'utf8' }))
+function percentile(arr, p) {
+  const sorted = arr.sort((a, b) => a - b)
 
-for (const type of ['no', 'tmp', 'loc', 'ext']) {
-  console.log(`--------- ${type}-cache ----------`)
-  for (const batch of [1, 2, 3]) {
-    const items = file.filter((l) => l.type === type && +l.batch === batch)
-    if (items.length === 0) {
-      continue
-    }
-    console.log(`>> batch ${batch}:`)
-    // console.log(items.map((x) => x.clientLatency))
-    // continue
+  const low = Math.floor(arr.length * p)
+  const heigh = Math.ceil(arr.length * p)
+  const perct = sorted.slice(low, heigh === low ? heigh + 1 : heigh)[0]
 
-    const containerFuncCount = items.reduce((acc, a) => {
-      acc[a.containerId] = (acc[a.containerId] || 0) + 1
-      return acc
-    }, {})
-    const containerSorting = Object.keys(containerFuncCount)
-      .map((x) => ({
-        id: x,
-        count: containerFuncCount[x],
-      }))
-      .sort((a, b) => b.count - a.count)
-    // console.log('Container count', containerSorting)
-    console.log('Container count', containerSorting.length)
+  return perct
+}
 
-    const vmCount = items.reduce((acc, a) => {
-      acc[getId(a.vmId.toLowerCase())] =
-        (acc[getId(a.vmId.toLowerCase())] || 0) + 1
-      return acc
-    }, {})
-    console.log(vmCount)
+const file = JSON.parse(fs.readFileSync('acc.json', { encoding: 'utf8' }))
 
-    const translat = (latStr) => Number(latStr.slice(0, -2))
-    const avgLat =
-      items
+const total = []
+
+for (const [type, batch] of [
+  // ['no', 0],
+  ['no', 1],
+  ['no', 2],
+  // ['tmp', 0],
+  ['tmp', 1],
+  ['tmp', 2],
+  ['tmp', 3],
+  // ['loc', 0],
+  ['loc', 1],
+  // ['loc', 2],
+  ['loc', 3],
+  // ['ext', 0],
+  ['ext', 1],
+  ['ext', 2],
+  ['ext', 3],
+]) {
+  const ret = {}
+  const items = file.filter((l) => l.type === type && +l.batch === batch)
+  // .filter((l) => Number(l.clientLatency.slice(0, -2)) < 500000)
+  if (items.length === 0) {
+    continue
+  }
+
+  total.push(ret)
+  ret.type = type + '-cache'
+
+  const containerFuncCount = items.reduce((acc, a) => {
+    acc[a.containerId] = (acc[a.containerId] || 0) + 1
+    return acc
+  }, {})
+  const containerSorting = Object.keys(containerFuncCount)
+    .map((x) => ({
+      id: x,
+      count: containerFuncCount[x],
+    }))
+    .sort((a, b) => b.count - a.count)
+  ret.containerCount = containerSorting.length
+
+  const vmCount = items.reduce((acc, a) => {
+    acc[getId(a.vmId.toLowerCase())] =
+      (acc[getId(a.vmId.toLowerCase())] || 0) + 1
+    return acc
+  }, {})
+  ret.vmUsageDistribution = Object.values(vmCount)
+    .map((c) => (c / items.length).toFixed(2))
+    .join('/')
+
+  const clientsLats = items.map((i) => Number(i.clientLatency.slice(0, -2)))
+  ret.avgClientLat = +(
+    clientsLats.slice(1).reduce((acc, a) => acc + a, clientsLats[0]) /
+    items.length
+  ).toFixed(0)
+
+  const notCached = items.filter((i) => i.cacheHit === false)
+  const avgS3Lat =
+    notCached
+      .slice(1)
+      .reduce((acc, a) => acc + a.downloadLat, notCached[0].downloadLat) /
+    notCached.length
+  ret.avgS3Lat = +avgS3Lat.toFixed(0)
+
+  if (type !== 'no') {
+    const cached = items.filter((i) => i.cacheHit === true)
+
+    ret.cacheHitRatio = +(cached.length / items.length).toFixed(3)
+
+    ret.avgCacheLat = +(
+      cached
         .slice(1)
-        .reduce(
-          (acc, a) => acc + translat(a.clientLatency),
-          translat(items[0].clientLatency)
-        ) / items.length
-    console.log('Avg latency', +avgLat.toFixed(0))
+        .reduce((acc, a) => acc + a.downloadLat, cached[0].downloadLat) /
+      cached.length
+    ).toFixed(0)
 
-    if (type !== 'no') {
-      const cached = items.filter((i) => i.cacheHit === true)
-      console.log(
-        'Cachehits',
-        ((100 * cached.length) / items.length).toFixed(0) + '%'
-      )
-      const avgDownLat =
-        cached
-          .slice(1)
-          .reduce((acc, a) => acc + a.downloadLat, cached[0].downloadLat) /
-        cached.length
-      console.log('Avg cache latency', +avgDownLat.toFixed(0))
-
-      const cTop90 = cached
-        .sort((a, b) => a.downloadLat - b.downloadLat)
-        .slice(0, Math.ceil(cached.length * 0.9))
-      const p90DownLat =
-        cTop90
-          .slice(1)
-          .reduce((acc, a) => acc + a.downloadLat, cTop90[0].downloadLat) /
-        cTop90.length
-      console.log('90th percentile cache latency', +p90DownLat.toFixed(0))
-    }
-
-    const notCached = items.filter((i) => i.cacheHit === false)
-    const avgS3Lat =
-      notCached
-        .slice(1)
-        .reduce((acc, a) => acc + a.downloadLat, notCached[0].downloadLat) /
-      notCached.length
-    console.log('Avg s3 latency', +avgS3Lat.toFixed(0))
+    ret.p90 = percentile(
+      cached.map((c) => c.downloadLat),
+      0.9
+    )
+    ret.p99 = percentile(
+      cached.map((c) => c.downloadLat),
+      0.99
+    )
   }
 }
+
+console.log(total)
+
+const header = Object.keys(total[total.length - 1]).join(',')
+const body = total.map((o) => Object.values(o).join(',')).join('\n')
+fs.writeFileSync('results.csv', header + '\n' + body, { encoding: 'utf8' })
