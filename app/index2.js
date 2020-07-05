@@ -38,6 +38,7 @@ const baseUrl =
 async function main(params) {
   logging.start()
   const tileStream = await getTile(params).catch(() => null)
+  logging.endFetch()
 
   if (!tileStream) {
     const ret = {

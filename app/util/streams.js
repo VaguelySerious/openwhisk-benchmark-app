@@ -19,7 +19,7 @@ function streamToBuffer(stream) {
 function pngStreamTransform(inStream, pngSettings, transform) {
   return new Promise((resolve, reject) => {
     inStream.pipe(new PNG(pngSettings)).on('parsed', function() {
-      logging.endFetch()
+      // logging.endFetch()
       transform.call(this)
       streamToBuffer(this.pack())
         .then(resolve)

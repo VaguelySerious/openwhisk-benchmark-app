@@ -22,6 +22,7 @@ async function main(params) {
   // }
   logging.start()
   const tileStream = await getTile(params).catch(() => null)
+  logging.endFetch()
   if (!tileStream) {
     const ret = {
       statusCode: 200,
@@ -84,6 +85,7 @@ async function getTile({ z, x, y }) {
   const readStream1 = new ReadableStreamClone(res.body)
   const readStream2 = new ReadableStreamClone(res.body)
 
+  console.log('wha')
   readStream1.pipe(fs.createWriteStream(localName))
   return readStream2
 }
