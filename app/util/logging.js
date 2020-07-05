@@ -1,14 +1,14 @@
 const fs = require('fs')
-const os = require('os')
+// const os = require('os')
 
-function hashString(str) {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash += Math.pow(str.charCodeAt(i) * 31, str.length - i)
-    hash = hash & hash // Convert to 32bit integer
-  }
-  return hash
-}
+// function hashString(str) {
+//   let hash = 0
+//   for (let i = 0; i < str.length; i++) {
+//     hash += Math.pow(str.charCodeAt(i) * 31, str.length - i)
+//     hash = hash & hash // Convert to 32bit integer
+//   }
+//   return hash
+// }
 
 const vmId = Math.floor(
   Date.now() / 1000 -

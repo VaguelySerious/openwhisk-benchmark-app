@@ -19,6 +19,13 @@ const fs = require('fs')
   },
 */
 
+const types = {
+  no: 'No caching',
+  tmp: 'Function scope',
+  loc: 'Machine scope',
+  ext: 'Global scope',
+}
+
 const ids = {
   '1f9to4m': 'a',
   '1f9to4n': 'a',
@@ -56,12 +63,13 @@ function percentile(arr, p) {
 const file = JSON.parse(fs.readFileSync('acc.json', { encoding: 'utf8' }))
 
 const total = []
+const pValues = []
 
 for (const [type, batch] of [
-  // ['no', 0],
+  ['no', 0],
   ['no', 1],
   ['no', 2],
-  // ['tmp', 0],
+  ['tmp', 0],
   ['tmp', 1],
   ['tmp', 2],
   ['tmp', 3],
@@ -70,19 +78,25 @@ for (const [type, batch] of [
   // ['loc', 2],
   ['loc', 3],
   // ['ext', 0],
-  ['ext', 1],
+  // ['ext', 1],
   ['ext', 2],
   ['ext', 3],
 ]) {
   const ret = {}
+  const ret2 = {}
   const items = file.filter((l) => l.type === type && +l.batch === batch)
-  // .filter((l) => Number(l.clientLatency.slice(0, -2)) < 500000)
+  // .filter((l) => Number(l.clientLatency.slice(0, -2)) < 1000)
+  // .filter((l) => l.executionStartTime -l.containerStartTime  > )
   if (items.length === 0) {
     continue
   }
 
+  // Fix to counteract the wrong measurements in downloadLat
+  items.forEach((i) => (i.downloadLat -= 14))
+
   total.push(ret)
-  ret.type = type + '-cache'
+  pValues.push(ret2)
+  ret.type = types[type]
 
   const containerFuncCount = items.reduce((acc, a) => {
     acc[a.containerId] = (acc[a.containerId] || 0) + 1
@@ -101,49 +115,64 @@ for (const [type, batch] of [
       (acc[getId(a.vmId.toLowerCase())] || 0) + 1
     return acc
   }, {})
-  ret.vmUsageDistribution = Object.values(vmCount)
+  ret.vmDistribution = Object.values(vmCount)
     .map((c) => (c / items.length).toFixed(2))
     .join('/')
 
-  const clientsLats = items.map((i) => Number(i.clientLatency.slice(0, -2)))
-  ret.avgClientLat = +(
-    clientsLats.slice(1).reduce((acc, a) => acc + a, clientsLats[0]) /
+  // Avg DL Lat
+  let downloadLats = items.map((i) => i.downloadLat)
+  ret.avgDlLat = +(
+    downloadLats.slice(1).reduce((acc, a) => acc + a, downloadLats[0]) /
     items.length
   ).toFixed(0)
 
+  // Avg DL Lat on miss
   const notCached = items.filter((i) => i.cacheHit === false)
-  const avgS3Lat =
+  const avgDlLatMiss =
     notCached
       .slice(1)
       .reduce((acc, a) => acc + a.downloadLat, notCached[0].downloadLat) /
     notCached.length
-  ret.avgS3Lat = +avgS3Lat.toFixed(0)
+  ret.avgDlLatMiss = +avgDlLatMiss.toFixed(0)
 
   if (type !== 'no') {
     const cached = items.filter((i) => i.cacheHit === true)
+    // Avg DL Lat on hit
+    clientsLats = cached.map((i) => i.downloadLat)
+    ret.avgDlLatHit = +(
+      clientsLats.reduce((acc, a) => acc + a, 0) / cached.length
+    ).toFixed(0)
 
     ret.cacheHitRatio = +(cached.length / items.length).toFixed(3)
 
-    ret.avgCacheLat = +(
-      cached
-        .slice(1)
-        .reduce((acc, a) => acc + a.downloadLat, cached[0].downloadLat) /
-      cached.length
-    ).toFixed(0)
-
-    ret.p90 = percentile(
-      cached.map((c) => c.downloadLat),
-      0.9
-    )
-    ret.p99 = percentile(
-      cached.map((c) => c.downloadLat),
-      0.99
-    )
+    for (let i = 0; i < 100; i++) {
+      const padded = String(i).padStart(2, '0')
+      ret2['p' + padded] = percentile(clientsLats, Number('0.' + padded))
+    }
   }
 }
 
-console.log(total)
+// console.log(total)
 
-const header = Object.keys(total[total.length - 1]).join(',')
-const body = total.map((o) => Object.values(o).join(',')).join('\n')
-fs.writeFileSync('results.csv', header + '\n' + body, { encoding: 'utf8' })
+const header = Object.keys(total[total.length - 1]).join('\t')
+body = total.map((o) => Object.values(o))
+for (let line of body) {
+  while (line.length < body[body.length - 1].length) {
+    line.push('-')
+  }
+}
+body = body.map((l) => l.join('\t'))
+
+console.log(header)
+console.log(body.join('\n'))
+fs.writeFileSync('results.tsv', header + '\n' + body.join('\n'), {
+  encoding: 'utf8',
+})
+
+fs.writeFileSync(
+  'pval.tsv',
+  pValues.map((pv) => Object.values(pv).join('\t')).join('\n'),
+  {
+    encoding: 'utf8',
+  }
+)
