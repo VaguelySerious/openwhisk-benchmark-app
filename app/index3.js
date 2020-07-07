@@ -9,7 +9,7 @@ const logging = require('./util/logging')
 
 const redis = Redis.createClient({
   return_buffers: true,
-  host: '35.159.28.28',
+  host: '3.125.181.167',
   auth_pass:
     '3f797c70216d0e548c34c2791537f304021ebc4b52bd486ac1b20d8b1f328085427422dabb8203f9610434dff4acd276097cd7f4cbd23f736eba53b55d712b6f',
   port: 6378,

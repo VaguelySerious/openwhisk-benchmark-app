@@ -1,0 +1,12 @@
+whisk:
+  # AWS
+  ingress:
+    type: LoadBalancer
+    annotations:
+      service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+      service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:iam::424794656258:server-certificate/ow-self-signed
+
+# Disable persistence
+k8s:
+  persistence:
+    enabled: false

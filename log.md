@@ -231,7 +231,7 @@ kubectl label nodes ip-172-31-34-254.eu-central-1.compute.internal invoker-index
 
 helm install owdev ~/code/openwhisk-deploy-kube/helm/openwhisk -f ~/.kube/mycluster.yaml
 
-zkubectl get services -o wide # Gives API endpoint for .wskprops, insert like "https://<url>:443"
+kubectl get services -o wide # Gives API endpoint for .wskprops, insert like "https://<url>:443"
 kubectl exec -it owdev-wskadmin -- bash
 wskadmin user create peter -ns default # This gives you your auth token for .wskprops
 
@@ -251,7 +251,7 @@ kubectl apply -f metrics-server-$DOWNLOAD_VERSION/deploy/1.8+/
 kubectl apply -f eks-admin-service-account.yaml
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
 kubectl proxy &
-eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJla3MtYWRtaW4tdG9rZW4tOGtueG0iLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZWtzLWFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiMzgyNjE4MmItZjJmYi00ZmU1LWExMzItZjhiZGU4ZDMxMTVmIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmVrcy1hZG1pbiJ9.TRwXf-kAOjA9cBlFUPlAj8xkvhKLpvTZHYGFOlVxOG6ZQqkehi4TYLwUxyaNwObTx9gqDWeaMs4NZV3BnhZRqWjf0GpExtNbPH1A2gt4ODoWUTkiD_7pzY0XC0aQPtv6VNLOCHsBTbKs2aEfd1mBJe5EPHyL9PklNzFEAS2_9x6iY7qWfIoDC5XnJvuhZpf-hcJgUCqa30PtUSeD1eWuh2If-uZh-jA96DsQ2nuNy20Sc3CXPtc38sWaDYWaLNNB2c3a7uM16aG7Kwtn9zz7ytmQFmNjhlfrENJ1eW_JjzL91g2eJL3lhQs_PIKQimmJb4eoRmX8m4fNIyBj9Gz-CQ
+eyJhbGciOiJSUzI1NiIsImtpZCI6Ik1oR0V0TUVZekdXbkJCWWRfR29ySVBrdExOeUNnS1VDWEMwS1p0dU56VVkifQ.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJrdWJlLXN5c3RlbSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VjcmV0Lm5hbWUiOiJla3MtYWRtaW4tdG9rZW4tdnI2a2oiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC5uYW1lIjoiZWtzLWFkbWluIiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZXJ2aWNlLWFjY291bnQudWlkIjoiOWZhOTZjNjQtNzNiMS00ZjY2LTgwOWMtODk1ZjIzYjkzYWNjIiwic3ViIjoic3lzdGVtOnNlcnZpY2VhY2NvdW50Omt1YmUtc3lzdGVtOmVrcy1hZG1pbiJ9.ZfkDiCSgE-YAcB7IGIKd0SQURIV4GKH6PiOgYUHQCnYakqCfLVIwS4hUAObnsIlxwDIvDac6UzY1fnY5YunVLZfPV67CwK8LpaUXEPCms6YEcz_rc4xXorNw_cKp6OpExJ8IIGJfaSFrQriRSkr8PFtyp8DbKx5t4hwCN09cUYSFYQOG1AKi72JxMFI74KLSvP96EiYdjh3hfz-pfA1nvbQtu4mxZrqFz95GgnYSwXl1BwQ6fY3dxqYTgMpFdq2LRVi28l-4TaSWyP72BlPLhzE7FZl-jW1mNaPj8ef14PXpZUXBCYiweoQJH2R1q0R8cYaUdhX2YZbRoe7alIWmpA
 # Got to http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#!/login
 # and use the auth token displayed from the previous command
 ```
@@ -323,6 +323,15 @@ Get files "test.py" and "seq.txt"
 sudo yum -y install python-pip
 sudo pip install tornado
 python test.py > out.py
+
+# between tests:
+kubectl get pods --no-headers=true | awk '/tiles/{print $1}' | xargs kubectl delete pod
+redis-cli -h 3.125.181.167 -p 6378 -a 3f797c70216d0e548c34c2791537f304021ebc4b52bd486ac1b20d8b1f328085427422dabb8203f9610434dff4acd276097cd7f4cbd23f736eba53b55d712b6f "flushall"
+kubectl exec --stdin --tty redis-0-pod -- redis-cli "flushall"
+kubectl exec --stdin --tty redis-1-pod -- redis-cli "flushall"
+kubectl exec --stdin --tty redis-2-pod -- redis-cli "flushall"
+
+kubectl get pods --no-headers=true | awk '/healthtestaction/{print $1}' | xargs kubectl delete pod
 ```
 
 ## Fix not being able to delete node group due to dependencies

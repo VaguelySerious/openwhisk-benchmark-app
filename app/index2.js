@@ -10,12 +10,12 @@ const id = logging.vmId.toLowerCase()
 console.error(`--- Host ID: ${id}`)
 
 const ids = {
-  '1fb2c08': '0',
-  '1fb2c09': '0',
-  '1fb2c32': '1',
-  '1fb2c33': '1',
-  '1fb2c6u': '2',
-  '1fb2c6t': '2',
+  '1fg9acn': '0',
+  '1fg9aco': '0',
+  '1fg9al0': '1',
+  '1fg9akv': '1',
+  '1fg9ams': '2',
+  '1fg9amt': '2',
 }
 
 const host = `redis-${ids[id]}-node`

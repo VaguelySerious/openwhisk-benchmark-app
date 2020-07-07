@@ -30,10 +30,12 @@ let tcpEndTime
 let cacheHit = false
 module.exports.vmId = vmId
 module.exports.startFetch = () => {
-  tcpTime = Date.now()
+  var hrTime = process.hrtime()
+  tcpTime = hrTime[0] * 1000000 + hrTime[1] / 1000
 }
 module.exports.endFetch = () => {
-  tcpEndTime = Date.now()
+  var hrTime = process.hrtime()
+  tcpEndTime = hrTime[0] * 1000000 + hrTime[1] / 1000
 }
 module.exports.start = () => {
   startTime = Date.now()
@@ -50,7 +52,7 @@ module.exports.end = (params) => {
     executionStartTime: startTime,
     executionEndTime,
     executionLat: executionEndTime - startTime,
-    downloadLat: tcpEndTime - tcpTime,
+    downloadLat: ((tcpEndTime - tcpTime) / 1000).toFixed(3),
     cacheHit,
     containerId,
     vmId,
