@@ -7,13 +7,15 @@ for (const type of ['ext', 'loc', 'no', 'tmp']) {
     // for (const solution of ['no']) {
     //   for (const num in [0]) {
     let file
+	const name = `results/x_${type}_${batch}.txt`
     try {
-      file = fs.readFileSync(`results/ex_${type}cache_${batch}.txt`, {
+      file = fs.readFileSync(name, {
         encoding: 'utf8',
       })
     } catch (e) {
       continue
     }
+	console.log(name)
 
     const lines = file
       .split('\n')
@@ -44,5 +46,5 @@ const header = Object.keys(all[0]).join(',')
 const body = all.map((o) => Object.values(o).join(',')).join('\n')
 
 // console.log(JSON.stringify(all, null, 2))
-// fs.writeFileSync('acc.json', JSON.stringify(all, null, 2), { encoding: 'utf8' })
+fs.writeFileSync('acc.json', JSON.stringify(all, null, 2), { encoding: 'utf8' })
 fs.writeFileSync('acc.csv', header + '\n' + body, { encoding: 'utf8' })

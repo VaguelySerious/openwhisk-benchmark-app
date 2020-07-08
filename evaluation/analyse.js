@@ -8,7 +8,7 @@ const fs = require('fs')
     "container": "wskowdev-invoker-00-916-default-tiles2",
     "containerId": "1E6F0VMRM",
     "containerStartTime": 1587487560158,
-    "downloadLat": 140,
+    "downloadLat": 140.000,
     "executionEndTime": 1587487583088,
     "executionLat": 192,
     "executionStartTime": 1587487582896,
@@ -27,26 +27,15 @@ const types = {
 }
 
 const ids = {
-  '1f9to4m': 'a',
-  '1f9to4n': 'a',
-  '1f9tnnt': 'b',
-  '1f9tnns': 'b',
-  '1f9toe0': 'c',
-  '1f9todv': 'c',
-}
-
-const ids2 = {
-  '1fb2c08': '0',
-  '1fb2c09': '0',
-  '1fb2c32': '1',
-  '1fb2c33': '1',
-  '1fb2c6u': '2',
-  '1fb2c6t': '2',
+  '1fg9acn': 'a',
+  '1fg9aco': 'a',
+  '1fg9al0': 'b',
+  '1fg9akv': 'b',
+  '1fg9ams': 'c',
+  '1fg9amt': 'c',
 }
 
 function getId(id) {
-  // return id
-  return ids2[id]
   return ids[id]
 }
 
@@ -66,19 +55,13 @@ const total = []
 const pValues = []
 
 for (const [type, batch] of [
-  ['no', 0],
   ['no', 1],
-  ['no', 2],
-  ['tmp', 0],
   ['tmp', 1],
   ['tmp', 2],
-  ['tmp', 3],
-  // ['loc', 0],
   ['loc', 1],
-  // ['loc', 2],
+  ['loc', 2],
   ['loc', 3],
-  // ['ext', 0],
-  // ['ext', 1],
+  ['ext', 1],
   ['ext', 2],
   ['ext', 3],
 ]) {
@@ -91,8 +74,7 @@ for (const [type, batch] of [
     continue
   }
 
-  // Fix to counteract the wrong measurements in downloadLat
-  items.forEach((i) => (i.downloadLat -= 14))
+  items.forEach((i) => (i.downloadLat = +i.downloadLat))
 
   total.push(ret)
   pValues.push(ret2)
@@ -122,18 +104,16 @@ for (const [type, batch] of [
   // Avg DL Lat
   let downloadLats = items.map((i) => i.downloadLat)
   ret.avgDlLat = +(
-    downloadLats.slice(1).reduce((acc, a) => acc + a, downloadLats[0]) /
-    items.length
-  ).toFixed(0)
+    downloadLats.reduce((acc, a) => acc + a, 0) / items.length
+  ).toFixed(3)
 
   // Avg DL Lat on miss
   const notCached = items.filter((i) => i.cacheHit === false)
   const avgDlLatMiss =
     notCached
-      .slice(1)
-      .reduce((acc, a) => acc + a.downloadLat, notCached[0].downloadLat) /
-    notCached.length
-  ret.avgDlLatMiss = +avgDlLatMiss.toFixed(0)
+      .reduce((acc, a) => acc + a.downloadLat, 0) /
+		notCached.length
+  ret.avgDlLatMiss = +avgDlLatMiss.toFixed(3)
 
   if (type !== 'no') {
     const cached = items.filter((i) => i.cacheHit === true)
@@ -141,9 +121,9 @@ for (const [type, batch] of [
     clientsLats = cached.map((i) => i.downloadLat)
     ret.avgDlLatHit = +(
       clientsLats.reduce((acc, a) => acc + a, 0) / cached.length
-    ).toFixed(0)
+    ).toFixed(3)
 
-    ret.cacheHitRatio = +(cached.length / items.length).toFixed(3)
+    ret.cacheHitRatio = +(100 * cached.length / items.length).toFixed(0) + '%'
 
     for (let i = 0; i < 100; i++) {
       const padded = String(i).padStart(2, '0')

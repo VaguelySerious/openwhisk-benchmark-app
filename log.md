@@ -332,6 +332,9 @@ kubectl exec --stdin --tty redis-1-pod -- redis-cli "flushall"
 kubectl exec --stdin --tty redis-2-pod -- redis-cli "flushall"
 
 kubectl get pods --no-headers=true | awk '/healthtestaction/{print $1}' | xargs kubectl delete pod
+
+kubectl get pods --no-headers=true | awk '/prewarm/{print $1}' | xargs kubectl delete pod
+
 ```
 
 ## Fix not being able to delete node group due to dependencies
