@@ -12,14 +12,6 @@ const baseUrl =
   'https://openwhisk-tiles.s3.eu-central-1.amazonaws.com/elevation'
 
 async function main(params) {
-  // const stdout = execSync('df -h', { encoding: 'utf8' })
-  // return {
-  //   statusCode: 200,
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: {
-  //     stdout,
-  //   },
-  // }
   logging.start()
   const tileStream = await getTile(params).catch(() => null)
   logging.endFetch()
@@ -55,7 +47,6 @@ async function main(params) {
     const imgBuffer = resultBuffer.toString('base64')
     ret.headers = { 'Content-Type': 'application/json' }
     ret.body = {
-      // image: imgBuffer,
       logging: logging.end(params),
     }
   }

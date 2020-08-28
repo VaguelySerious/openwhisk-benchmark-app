@@ -76,6 +76,13 @@ for (const [type, batch] of [
 
   items.forEach((i) => (i.downloadLat = +i.downloadLat))
 
+  fs.writeFileSync(`graphs/clientGraph-${type}-${batch}.csv`, items
+    .sort((a, b) => a.executionStartTime - b.executionStartTime)
+    .filter(item => item.downloadLat <= 200)
+    .map((item, i) => `${item.downloadLat},${Number(item.cacheHit)}`)
+    .join('\n')
+  , {encoding: 'utf8'})
+
   total.push(ret)
   pValues.push(ret2)
   ret.type = types[type]
