@@ -39,7 +39,7 @@ axs[3].bar(np.linspace(0,3469,3470), height=ext['latency'])
 axs[3].set_title('Global-scope caching')
 axs[3].set_xlabel('Request #')
 fig.text(0.00, 0.5, 'Latency [ms]', va='center', rotation='vertical')
-fig.set_size_inches(10,8)
+fig.set_size_inches(12,14)
 fig.tight_layout()
 plt.show()
 
